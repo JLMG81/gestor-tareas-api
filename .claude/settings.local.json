@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\Users\\\\Olga\\\\Desktop\\\\Cursos\\\\Devin\\\\task-manager-api\\\\aplicacion\\\\rutas\")"
-    ]
-  }
-}
