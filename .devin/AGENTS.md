@@ -31,7 +31,7 @@ task-manager-api/
 │   └── test_tasks.py      # Tests con pytest y SQLite en memoria
 ├── requirements.txt
 └── .devin/
-    └── instructions.md
+    └── AGENTS.md
 ```
 
 ## Cómo arrancar la API
@@ -104,3 +104,6 @@ Los tests usan una base de datos SQLite en memoria con `StaticPool` para garanti
 ### Git
 - Un commit por cambio lógico; mensaje en formato `tipo: descripción breve` (feat, fix, refactor, docs, pruebas).
 - No hacer commit de `tareas.db`, `__pycache__/` ni archivos `.pyc`.
+
+### Nuevos endpoints
+- Todos los endpoints nuevos deben incluir al menos un test de caso error además del happy path obligatoriamente.
