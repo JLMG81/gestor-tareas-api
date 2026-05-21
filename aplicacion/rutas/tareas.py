@@ -73,7 +73,16 @@ def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
         Task: Instancia de la tarea recién creada con el
             identificador y la fecha de creación asignados
             por la base de datos.
+
+    Raises:
+        HTTPException: Error 422 si el título tiene menos de
+            3 caracteres.
     """
+    if len(payload.title) < 3:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="El título debe tener al menos 3 caracteres",
+        )
     task = Task(**payload.model_dump())
     db.add(task)
     db.commit()
