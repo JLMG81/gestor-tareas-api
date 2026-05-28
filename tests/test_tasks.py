@@ -149,6 +149,13 @@ class TestUpdateTaskErrors:
         )
         assert resp.status_code == 422
 
+    def test_update_with_short_title_returns_422(self, client, sample_task):
+        resp = client.patch(
+            f"/tasks/{sample_task['id']}", json={"title": "ab"}
+        )
+        assert resp.status_code == 422
+        assert resp.json()["detail"] is not None
+
     def test_update_with_empty_body(self, client, sample_task):
         resp = client.patch(f"/tasks/{sample_task['id']}", json={})
         assert resp.status_code == 200
