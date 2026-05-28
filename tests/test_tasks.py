@@ -232,6 +232,28 @@ class TestDeleteTaskErrors:
         assert resp.status_code == 404
 
 
+# ── DELETE /tasks/ – eliminar todas las tareas ───────────────────────
+
+class TestDeleteAllTasks:
+    def test_delete_all_returns_204_and_empties_list(self, client):
+        client.post("/tasks/", json={"title": "Tarea 1"})
+        client.post("/tasks/", json={"title": "Tarea 2"})
+        client.post("/tasks/", json={"title": "Tarea 3"})
+        resp = client.delete("/tasks/")
+        assert resp.status_code == 204
+        assert resp.content == b""
+        listing = client.get("/tasks/")
+        assert listing.status_code == 200
+        assert listing.json() == []
+
+    def test_delete_all_on_empty_db_returns_204(self, client):
+        resp = client.delete("/tasks/")
+        assert resp.status_code == 204
+        listing = client.get("/tasks/")
+        assert listing.status_code == 200
+        assert listing.json() == []
+
+
 # ── GET /tasks/ – lista vacía y con datos ────────────────────────────
 
 class TestListTasks:
