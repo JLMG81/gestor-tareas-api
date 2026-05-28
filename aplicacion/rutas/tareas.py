@@ -99,6 +99,8 @@ def update_task(
     Raises:
         HTTPException: Error 404 si no existe una tarea con
             el ``task_id`` indicado.
+        ValidationError: Error 422 si el título proporcionado
+            tiene menos de 3 caracteres.
     """
     task = db.query(Task).filter(Task.id == task_id).first()
     if not task:
