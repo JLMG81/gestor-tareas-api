@@ -93,6 +93,11 @@ def test_create_task_without_category_returns_422(client):
     assert "detail" in body
 
 
+def test_create_with_null_category_returns_422(client):
+    resp = client.post("/tasks/", json={"title": "Tarea null cat", "category": None})
+    assert resp.status_code == 422
+
+
 def test_update_task_category(client):
     create = client.post(
         "/tasks/",
@@ -120,3 +125,18 @@ def test_category_present_in_task_response(client):
     assert len(data) == 1
     assert "category" in data[0]
     assert data[0]["category"] == "estudio"
+
+
+def test_create_minimal_task_includes_category(client):
+    resp = client.post(
+        "/tasks/", json={"title": "Tarea mínima", "category": "general"}
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["category"] == "general"
+
+
+def test_task_create_schema_requires_category():
+    from aplicacion.esquemas import TaskCreate
+    task = TaskCreate(title="test", category="general")
+    assert task.category == "general"

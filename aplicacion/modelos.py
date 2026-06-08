@@ -21,6 +21,7 @@ class Task(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
+    category = Column(String(100), nullable=False, server_default="sin_categoria")
     description = Column(String, nullable=True)
     category = Column(String(100), nullable=False)
     status = Column(Enum(TaskStatus), default=TaskStatus.pending, nullable=False)

@@ -29,13 +29,13 @@ client = TestClient(app)
 
 
 def test_create_task_title_too_short_returns_422():
-    response = client.post("/tasks/", json={"title": "ab", "category": "trabajo"})
+    response = client.post("/tasks/", json={"title": "ab", "category": "general"})
     assert response.status_code == 422
     assert response.json()["detail"] == "El título debe tener al menos 3 caracteres"
 
 
 def test_patch_done_task_returns_409():
-    response = client.post("/tasks/", json={"title": "Tarea completa", "category": "trabajo", "status": "done"})
+    response = client.post("/tasks/", json={"title": "Tarea completa", "category": "general", "status": "done"})
     assert response.status_code == 201
     task_id = response.json()["id"]
 
