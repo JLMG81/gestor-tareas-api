@@ -28,6 +28,12 @@ app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 
+def test_create_task_title_too_short_returns_422():
+    response = client.post("/tasks/", json={"title": "ab"})
+    assert response.status_code == 422
+    assert response.json()["detail"] == "El título debe tener al menos 3 caracteres"
+
+
 def test_patch_done_task_returns_409():
     response = client.post("/tasks/", json={"title": "Tarea completa", "status": "done"})
     assert response.status_code == 201
