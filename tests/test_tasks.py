@@ -39,9 +39,9 @@ def client():
 # — Happy path: filtra correctamente por estado —
 
 def test_list_tasks_by_status_returns_matching_tasks(client):
-    client.post("/tasks/", json={"title": "Tarea pendiente"})
-    client.post("/tasks/", json={"title": "Tarea en progreso", "status": "in_progress"})
-    client.post("/tasks/", json={"title": "Tarea hecha", "status": "done"})
+    client.post("/tasks/", json={"title": "Tarea pendiente", "category": "general"})
+    client.post("/tasks/", json={"title": "Tarea en progreso", "category": "general", "status": "in_progress"})
+    client.post("/tasks/", json={"title": "Tarea hecha", "category": "general", "status": "done"})
 
     response = client.get("/tasks/status/pending")
     assert response.status_code == 200
@@ -52,7 +52,7 @@ def test_list_tasks_by_status_returns_matching_tasks(client):
 
 
 def test_list_tasks_by_status_returns_empty_when_no_match(client):
-    client.post("/tasks/", json={"title": "Tarea pendiente"})
+    client.post("/tasks/", json={"title": "Tarea pendiente", "category": "general"})
 
     response = client.get("/tasks/status/done")
     assert response.status_code == 200
@@ -66,3 +66,50 @@ def test_list_tasks_by_status_invalid_status_returns_422(client):
     assert response.status_code == 422
     body = response.json()
     assert "detail" in body
+
+
+# — Tests de categoría —
+
+def test_create_without_category_returns_422(client):
+    resp = client.post("/tasks/", json={"title": "Tarea sin cat"})
+    assert resp.status_code == 422
+
+
+def test_create_with_null_category_returns_422(client):
+    resp = client.post("/tasks/", json={"title": "Tarea null cat", "category": None})
+    assert resp.status_code == 422
+
+
+def test_create_task_with_category(client):
+    resp = client.post("/tasks/", json={"title": "Tarea trabajo", "category": "trabajo"})
+    assert resp.status_code == 201
+    assert resp.json()["category"] == "trabajo"
+
+
+def test_create_minimal_task_includes_category(client):
+    resp = client.post(
+        "/tasks/", json={"title": "Tarea mínima", "category": "general"}
+    )
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["category"] == "general"
+
+
+def test_update_only_category(client):
+    resp = client.post(
+        "/tasks/", json={"title": "Tarea para actualizar", "category": "general"}
+    )
+    assert resp.status_code == 201
+    task_id = resp.json()["id"]
+
+    resp = client.patch(
+        f"/tasks/{task_id}", json={"category": "personal"}
+    )
+    assert resp.status_code == 200
+    assert resp.json()["category"] == "personal"
+
+
+def test_task_create_schema_requires_category():
+    from aplicacion.esquemas import TaskCreate
+    task = TaskCreate(title="test", category="general")
+    assert task.category == "general"
