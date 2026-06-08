@@ -1,40 +1,80 @@
 # Definición de los endpoints REST para la gestión de tareas
 
-from typing import List
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from aplicacion.base_de_datos import get_db
 from aplicacion.esquemas import TaskCreate, TaskResponse, TaskUpdate
 from aplicacion.modelos import Task, TaskStatus
 
+# Límite máximo de resultados por página para evitar respuestas excesivas
+MAX_PAGE_SIZE = 100
+DEFAULT_PAGE_SIZE = 20
+
 # Router con prefijo /tasks; agrupa todos los endpoints de tareas
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
-@router.get("/", response_model=List[TaskResponse])
-def list_tasks(db: Session = Depends(get_db)):
-    """Devuelve la lista completa de tareas almacenadas.
+@router.get("/", response_model=list[TaskResponse])
+def list_tasks(
+    skip: int = Query(0, ge=0, description="Registros a saltar"),
+    limit: int = Query(
+        DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE,
+        description="Máximo de registros a devolver",
+    ),
+    db: Session = Depends(get_db),
+):
+    """Devuelve una página de tareas almacenadas.
 
     Args:
+        skip (int): Número de registros a saltar (offset).
+        limit (int): Cantidad máxima de registros a devolver
+            por página (entre 1 y 100, por defecto 20).
         db (Session): Sesión de base de datos inyectada por
             la dependencia ``get_db``.
 
     Returns:
-        list[Task]: Lista con todas las tareas registradas
-            en la base de datos.
+        list[Task]: Lista paginada de tareas.
     """
-    return db.query(Task).all()
+    stmt = select(Task).offset(skip).limit(limit)
+    return list(db.scalars(stmt).all())
 
 
-# Devuelve las tareas que coincidan con el estado indicado
-@router.get("/status/{status}", response_model=List[TaskResponse])
-def list_tasks_by_status(status: TaskStatus, db: Session = Depends(get_db)):
-    return db.query(Task).filter(Task.status == status).all()
+@router.get("/status/{status}", response_model=list[TaskResponse])
+def list_tasks_by_status(
+    status: TaskStatus,
+    skip: int = Query(0, ge=0, description="Registros a saltar"),
+    limit: int = Query(
+        DEFAULT_PAGE_SIZE, ge=1, le=MAX_PAGE_SIZE,
+        description="Máximo de registros a devolver",
+    ),
+    db: Session = Depends(get_db),
+):
+    """Devuelve una página de tareas filtradas por estado.
+
+    Args:
+        status (TaskStatus): Estado por el que filtrar las
+            tareas (pending, in_progress o done).
+        skip (int): Número de registros a saltar (offset).
+        limit (int): Cantidad máxima de registros a devolver
+            por página (entre 1 y 100, por defecto 20).
+        db (Session): Sesión de base de datos inyectada por
+            la dependencia ``get_db``.
+
+    Returns:
+        list[Task]: Lista paginada de tareas con el estado
+            solicitado.
+    """
+    stmt = (
+        select(Task)
+        .where(Task.status == status)
+        .offset(skip)
+        .limit(limit)
+    )
+    return list(db.scalars(stmt).all())
 
 
-# Devuelve una tarea por su identificador; 404 si no existe
 @router.get("/{task_id}", response_model=TaskResponse)
 def get_task(task_id: int, db: Session = Depends(get_db)):
     """Obtiene una tarea por su identificador.
@@ -52,9 +92,12 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
         HTTPException: Error 404 si no existe una tarea con
             el ``task_id`` indicado.
     """
-    task = db.query(Task).filter(Task.id == task_id).first()
+    stmt = select(Task).where(Task.id == task_id)
+    task = db.scalars(stmt).first()
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
     return task
 
 
@@ -118,9 +161,12 @@ def update_task(
         ValidationError: Error 422 si el título proporcionado
             tiene menos de 3 caracteres.
     """
-    task = db.query(Task).filter(Task.id == task_id).first()
+    stmt = select(Task).where(Task.id == task_id)
+    task = db.scalars(stmt).first()
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
     if task.status == TaskStatus.done:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -141,7 +187,7 @@ def delete_all_tasks(db: Session = Depends(get_db)):
         db (Session): Sesión de base de datos inyectada por
             la dependencia ``get_db``.
     """
-    db.query(Task).delete()
+    db.execute(delete(Task))
     db.commit()
 
 
@@ -159,8 +205,11 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
         HTTPException: Error 404 si no existe una tarea con
             el ``task_id`` indicado.
     """
-    task = db.query(Task).filter(Task.id == task_id).first()
+    stmt = select(Task).where(Task.id == task_id)
+    task = db.scalars(stmt).first()
     if not task:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
+        )
     db.delete(task)
     db.commit()
