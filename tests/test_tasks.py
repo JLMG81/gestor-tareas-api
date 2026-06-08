@@ -1,4 +1,4 @@
-# Tests del endpoint GET /tasks/status/{status}
+# Tests de la API de gestión de tareas
 
 import pytest
 from fastapi.testclient import TestClient
@@ -39,9 +39,15 @@ def client():
 # — Happy path: filtra correctamente por estado —
 
 def test_list_tasks_by_status_returns_matching_tasks(client):
-    client.post("/tasks/", json={"title": "Tarea pendiente"})
-    client.post("/tasks/", json={"title": "Tarea en progreso", "status": "in_progress"})
-    client.post("/tasks/", json={"title": "Tarea hecha", "status": "done"})
+    client.post("/tasks/", json={"title": "Tarea pendiente", "category": "trabajo"})
+    client.post(
+        "/tasks/",
+        json={"title": "Tarea en progreso", "category": "personal", "status": "in_progress"},
+    )
+    client.post(
+        "/tasks/",
+        json={"title": "Tarea hecha", "category": "estudio", "status": "done"},
+    )
 
     response = client.get("/tasks/status/pending")
     assert response.status_code == 200
@@ -52,7 +58,7 @@ def test_list_tasks_by_status_returns_matching_tasks(client):
 
 
 def test_list_tasks_by_status_returns_empty_when_no_match(client):
-    client.post("/tasks/", json={"title": "Tarea pendiente"})
+    client.post("/tasks/", json={"title": "Tarea pendiente", "category": "trabajo"})
 
     response = client.get("/tasks/status/done")
     assert response.status_code == 200
@@ -66,3 +72,51 @@ def test_list_tasks_by_status_invalid_status_returns_422(client):
     assert response.status_code == 422
     body = response.json()
     assert "detail" in body
+
+
+# — Tests del campo obligatorio 'category' —
+
+def test_create_task_with_category(client):
+    response = client.post(
+        "/tasks/",
+        json={"title": "Nueva tarea", "category": "trabajo"},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["category"] == "trabajo"
+
+
+def test_create_task_without_category_returns_422(client):
+    response = client.post("/tasks/", json={"title": "Sin categoría"})
+    assert response.status_code == 422
+    body = response.json()
+    assert "detail" in body
+
+
+def test_update_task_category(client):
+    create = client.post(
+        "/tasks/",
+        json={"title": "Tarea original", "category": "trabajo"},
+    )
+    task_id = create.json()["id"]
+
+    response = client.patch(
+        f"/tasks/{task_id}",
+        json={"category": "personal"},
+    )
+    assert response.status_code == 200
+    assert response.json()["category"] == "personal"
+
+
+def test_category_present_in_task_response(client):
+    client.post(
+        "/tasks/",
+        json={"title": "Tarea completa", "category": "estudio"},
+    )
+
+    response = client.get("/tasks/")
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 1
+    assert "category" in data[0]
+    assert data[0]["category"] == "estudio"
