@@ -64,8 +64,8 @@ def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
 
     Args:
         payload (TaskCreate): Esquema con los datos de la
-            nueva tarea (título obligatorio, descripción y
-            estado opcionales).
+            nueva tarea (título y categoría obligatorios,
+            descripción y estado opcionales).
         db (Session): Sesión de base de datos inyectada por
             la dependencia ``get_db``.
 
@@ -103,8 +103,8 @@ def update_task(
         task_id (int): Identificador único de la tarea a
             actualizar.
         payload (TaskUpdate): Esquema con los campos a
-            modificar (título, descripción o estado, todos
-            opcionales).
+            modificar (título, descripción, categoría o
+            estado, todos opcionales).
         db (Session): Sesión de base de datos inyectada por
             la dependencia ``get_db``.
 

@@ -8,10 +8,11 @@ from pydantic import BaseModel, Field
 from aplicacion.modelos import TaskStatus
 
 
-# Esquema para crear una nueva tarea; solo el título es obligatorio
+# Esquema para crear una nueva tarea; título y categoría son obligatorios
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
+    category: str
     status: TaskStatus = TaskStatus.pending
 
 
@@ -19,6 +20,7 @@ class TaskCreate(BaseModel):
 class TaskUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=3)
     description: Optional[str] = None
+    category: Optional[str] = None
     status: Optional[TaskStatus] = None
 
 
@@ -27,6 +29,7 @@ class TaskResponse(BaseModel):
     id: int
     title: str
     description: Optional[str]
+    category: str
     status: TaskStatus
     created_at: datetime
 

@@ -1,6 +1,6 @@
 # API de Gestión de Tareas
 
-API REST para gestionar tareas construida con **FastAPI** y **SQLAlchemy**. Permite crear, consultar, actualizar y eliminar tareas. Cada tarea cuenta con un identificador único, título, descripción opcional, estado (`pending`, `in_progress`, `done`) y fecha de creación automática.
+API REST para gestionar tareas construida con **FastAPI** y **SQLAlchemy**. Permite crear, consultar, actualizar y eliminar tareas. Cada tarea cuenta con un identificador único, título, descripción opcional, categoría (obligatoria), estado (`pending`, `in_progress`, `done`) y fecha de creación automática.
 
 ---
 
@@ -86,6 +86,7 @@ curl http://127.0.0.1:8000/tasks/
     "id": 1,
     "title": "Revisar documentación",
     "description": "Actualizar el README del proyecto",
+    "category": "docs",
     "status": "pending",
     "created_at": "2026-05-28T10:30:00"
   }
@@ -115,6 +116,7 @@ curl http://127.0.0.1:8000/tasks/1
   "id": 1,
   "title": "Revisar documentación",
   "description": "Actualizar el README del proyecto",
+  "category": "docs",
   "status": "pending",
   "created_at": "2026-05-28T10:30:00"
 }
@@ -136,7 +138,7 @@ curl http://127.0.0.1:8000/tasks/1
 |---|---|
 | **Método** | `POST` |
 | **Ruta** | `/tasks/` |
-| **Cuerpo (JSON)** | `title` (str, obligatorio), `description` (str, opcional), `status` (str, opcional — por defecto `"pending"`) |
+| **Cuerpo (JSON)** | `title` (str, obligatorio), `description` (str, opcional), `category` (str, obligatorio), `status` (str, opcional — por defecto `"pending"`) |
 
 Valores válidos para `status`: `"pending"`, `"in_progress"`, `"done"`.
 
@@ -145,7 +147,7 @@ Valores válidos para `status`: `"pending"`, `"in_progress"`, `"done"`.
 ```bash
 curl -X POST http://127.0.0.1:8000/tasks/ \
   -H "Content-Type: application/json" \
-  -d '{"title": "Implementar login", "description": "Añadir autenticación JWT"}'
+  -d '{"title": "Implementar login", "description": "Añadir autenticación JWT", "category": "backend"}'
 ```
 
 **Ejemplo de respuesta** (`201 Created`):
@@ -155,6 +157,7 @@ curl -X POST http://127.0.0.1:8000/tasks/ \
   "id": 2,
   "title": "Implementar login",
   "description": "Añadir autenticación JWT",
+  "category": "backend",
   "status": "pending",
   "created_at": "2026-05-28T11:00:00"
 }
@@ -169,7 +172,7 @@ curl -X POST http://127.0.0.1:8000/tasks/ \
 | **Método** | `PATCH` |
 | **Ruta** | `/tasks/{task_id}` |
 | **Parámetros de ruta** | `task_id` (int) — Identificador de la tarea |
-| **Cuerpo (JSON)** | `title` (str, opcional), `description` (str, opcional), `status` (str, opcional) |
+| **Cuerpo (JSON)** | `title` (str, opcional), `description` (str, opcional), `category` (str, opcional), `status` (str, opcional) |
 
 Solo se actualizan los campos incluidos en el cuerpo de la petición.
 
@@ -188,6 +191,7 @@ curl -X PATCH http://127.0.0.1:8000/tasks/2 \
   "id": 2,
   "title": "Implementar login",
   "description": "Añadir autenticación JWT",
+  "category": "backend",
   "status": "in_progress",
   "created_at": "2026-05-28T11:00:00"
 }
