@@ -120,3 +120,62 @@ def test_category_present_in_task_response(client):
     assert len(data) == 1
     assert "category" in data[0]
     assert data[0]["category"] == "estudio"
+
+
+# — Regresión: títulos de solo espacios o con espacios de relleno —
+
+def test_create_task_whitespace_only_title_returns_422(client):
+    response = client.post(
+        "/tasks/",
+        json={"title": "     ", "category": "trabajo"},
+    )
+    assert response.status_code == 422
+    assert "detail" in response.json()
+
+
+def test_create_task_short_padded_title_returns_422(client):
+    response = client.post(
+        "/tasks/",
+        json={"title": "  ab  ", "category": "trabajo"},
+    )
+    assert response.status_code == 422
+    assert "detail" in response.json()
+
+
+def test_create_task_strips_title_whitespace(client):
+    response = client.post(
+        "/tasks/",
+        json={"title": "  Tarea válida  ", "category": "trabajo"},
+    )
+    assert response.status_code == 201
+    assert response.json()["title"] == "Tarea válida"
+
+
+def test_update_task_whitespace_only_title_returns_422(client):
+    create = client.post(
+        "/tasks/",
+        json={"title": "Tarea original", "category": "trabajo"},
+    )
+    task_id = create.json()["id"]
+
+    response = client.patch(
+        f"/tasks/{task_id}",
+        json={"title": "     "},
+    )
+    assert response.status_code == 422
+    assert "detail" in response.json()
+
+
+def test_update_task_strips_title_whitespace(client):
+    create = client.post(
+        "/tasks/",
+        json={"title": "Tarea original", "category": "trabajo"},
+    )
+    task_id = create.json()["id"]
+
+    response = client.patch(
+        f"/tasks/{task_id}",
+        json={"title": "  Nuevo título  "},
+    )
+    assert response.status_code == 200
+    assert response.json()["title"] == "Nuevo título"
