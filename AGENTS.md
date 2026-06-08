@@ -30,8 +30,7 @@ task-manager-api/
 ├── tests/
 │   └── test_tasks.py      # Tests con pytest y SQLite en memoria
 ├── requirements.txt
-└── .devin/
-    └── AGENTS.md
+└── AGENTS.md
 ```
 
 ## Cómo arrancar la API
@@ -107,3 +106,9 @@ Los tests usan una base de datos SQLite en memoria con `StaticPool` para garanti
 
 ### Nuevos endpoints
 - Todos los endpoints nuevos deben incluir al menos un test de caso error además del happy path obligatoriamente.
+
+### Documentación en PRs
+Cada PR debe incluir:
+- Docstrings actualizados en las funciones modificadas con Google style
+- Actualización del README si se añaden o modifican endpoints
+- Descripción del PR con qué cambió, por qué cambió y cómo probarlo.
