@@ -120,3 +120,79 @@ def test_category_present_in_task_response(client):
     assert len(data) == 1
     assert "category" in data[0]
     assert data[0]["category"] == "estudio"
+
+
+# — Tests de GET /tasks/{task_id} —
+
+def test_get_task_returns_task(client):
+    create = client.post(
+        "/tasks/",
+        json={"title": "Tarea de prueba", "category": "trabajo"},
+    )
+    task_id = create.json()["id"]
+
+    response = client.get(f"/tasks/{task_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == task_id
+    assert data["title"] == "Tarea de prueba"
+    assert data["category"] == "trabajo"
+
+
+def test_get_task_not_found_returns_404(client):
+    response = client.get("/tasks/9999")
+    assert response.status_code == 404
+    body = response.json()
+    assert "detail" in body
+
+
+# — Test de PATCH /tasks/{task_id} con id inexistente —
+
+def test_update_task_not_found_returns_404(client):
+    response = client.patch(
+        "/tasks/9999",
+        json={"title": "No existe"},
+    )
+    assert response.status_code == 404
+    body = response.json()
+    assert "detail" in body
+
+
+# — Tests de DELETE /tasks/ (bulk) —
+
+def test_delete_all_tasks_returns_204(client):
+    client.post(
+        "/tasks/",
+        json={"title": "Tarea uno", "category": "trabajo"},
+    )
+    client.post(
+        "/tasks/",
+        json={"title": "Tarea dos", "category": "personal"},
+    )
+
+    response = client.delete("/tasks/")
+    assert response.status_code == 204
+
+    # Verificar que no quedan tareas
+    listing = client.get("/tasks/")
+    assert listing.json() == []
+
+
+# — Tests de DELETE /tasks/{task_id} —
+
+def test_delete_task_returns_204(client):
+    create = client.post(
+        "/tasks/",
+        json={"title": "Tarea borrable", "category": "trabajo"},
+    )
+    task_id = create.json()["id"]
+
+    response = client.delete(f"/tasks/{task_id}")
+    assert response.status_code == 204
+
+
+def test_delete_task_not_found_returns_404(client):
+    response = client.delete("/tasks/9999")
+    assert response.status_code == 404
+    body = response.json()
+    assert "detail" in body
