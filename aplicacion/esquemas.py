@@ -24,6 +24,11 @@ class TaskUpdate(BaseModel):
     status: Optional[TaskStatus] = None
 
 
+# Esquema de respuesta para el conteo total de tareas
+class TaskCountResponse(BaseModel):
+    count: int
+
+
 # Esquema de respuesta que devuelve la API; incluye los campos generados por la BD
 class TaskResponse(BaseModel):
     id: int

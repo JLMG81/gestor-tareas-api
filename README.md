@@ -233,7 +233,31 @@ curl -X DELETE http://127.0.0.1:8000/tasks/2
 
 ---
 
-### 6. Eliminar todas las tareas
+### 6. Contar tareas
+
+| | |
+|---|---|
+| **Método** | `GET` |
+| **Ruta** | `/tasks/count` |
+| **Parámetros** | Ninguno |
+
+**Ejemplo de petición:**
+
+```bash
+curl http://127.0.0.1:8000/tasks/count
+```
+
+**Ejemplo de respuesta** (`200 OK`):
+
+```json
+{
+  "count": 5
+}
+```
+
+---
+
+### 7. Eliminar todas las tareas
 
 | | |
 |---|---|
