@@ -120,3 +120,75 @@ def test_category_present_in_task_response(client):
     assert len(data) == 1
     assert "category" in data[0]
     assert data[0]["category"] == "estudio"
+
+
+# — Tests del campo opcional 'description' con max 200 caracteres —
+
+def test_create_task_with_description(client):
+    response = client.post(
+        "/tasks/",
+        json={
+            "title": "Tarea con desc",
+            "category": "trabajo",
+            "description": "Una descripción válida",
+        },
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["description"] == "Una descripción válida"
+
+
+def test_create_task_without_description(client):
+    response = client.post(
+        "/tasks/",
+        json={"title": "Sin descripción", "category": "trabajo"},
+    )
+    assert response.status_code == 201
+    assert response.json()["description"] is None
+
+
+def test_create_task_description_exceeds_200_chars_returns_422(client):
+    long_desc = "x" * 201
+    response = client.post(
+        "/tasks/",
+        json={
+            "title": "Tarea larga",
+            "category": "trabajo",
+            "description": long_desc,
+        },
+    )
+    assert response.status_code == 422
+    body = response.json()
+    assert "detail" in body
+
+
+def test_update_task_description(client):
+    create = client.post(
+        "/tasks/",
+        json={"title": "Tarea original", "category": "trabajo"},
+    )
+    task_id = create.json()["id"]
+
+    response = client.patch(
+        f"/tasks/{task_id}",
+        json={"description": "Descripción actualizada"},
+    )
+    assert response.status_code == 200
+    assert response.json()["description"] == "Descripción actualizada"
+
+
+def test_update_task_description_exceeds_200_chars_returns_422(client):
+    create = client.post(
+        "/tasks/",
+        json={"title": "Tarea original", "category": "trabajo"},
+    )
+    task_id = create.json()["id"]
+
+    long_desc = "y" * 201
+    response = client.patch(
+        f"/tasks/{task_id}",
+        json={"description": long_desc},
+    )
+    assert response.status_code == 422
+    body = response.json()
+    assert "detail" in body
