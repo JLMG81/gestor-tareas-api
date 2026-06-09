@@ -120,3 +120,52 @@ def test_category_present_in_task_response(client):
     assert len(data) == 1
     assert "category" in data[0]
     assert data[0]["category"] == "estudio"
+
+
+# — Tests del campo description (máx 200 caracteres) —
+
+def test_create_task_with_description(client):
+    response = client.post(
+        "/tasks/",
+        json={"title": "Tarea con desc", "category": "trabajo", "description": "Breve"},
+    )
+    assert response.status_code == 201
+    assert response.json()["description"] == "Breve"
+
+
+def test_create_task_description_max_200_returns_422(client):
+    long_desc = "a" * 201
+    response = client.post(
+        "/tasks/",
+        json={"title": "Tarea larga", "category": "trabajo", "description": long_desc},
+    )
+    assert response.status_code == 422
+    body = response.json()
+    assert "detail" in body
+
+
+def test_create_task_description_exactly_200_ok(client):
+    desc_200 = "b" * 200
+    response = client.post(
+        "/tasks/",
+        json={"title": "Tarea límite", "category": "trabajo", "description": desc_200},
+    )
+    assert response.status_code == 201
+    assert response.json()["description"] == desc_200
+
+
+def test_update_task_description_max_200_returns_422(client):
+    create = client.post(
+        "/tasks/",
+        json={"title": "Tarea para update", "category": "trabajo"},
+    )
+    task_id = create.json()["id"]
+
+    long_desc = "c" * 201
+    response = client.patch(
+        f"/tasks/{task_id}",
+        json={"description": long_desc},
+    )
+    assert response.status_code == 422
+    body = response.json()
+    assert "detail" in body
