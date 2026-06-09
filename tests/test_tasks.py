@@ -120,3 +120,45 @@ def test_category_present_in_task_response(client):
     assert len(data) == 1
     assert "category" in data[0]
     assert data[0]["category"] == "estudio"
+
+
+# — Tests de paginación —
+
+def test_list_tasks_default_pagination(client):
+    """La paginación por defecto devuelve un máximo de 20 registros."""
+    for i in range(25):
+        client.post("/tasks/", json={"title": f"Tarea {i:03d}", "category": "bulk"})
+
+    response = client.get("/tasks/")
+    assert response.status_code == 200
+    assert len(response.json()) == 20
+
+
+def test_list_tasks_skip_and_limit(client):
+    """Los parámetros skip y limit controlan la página devuelta."""
+    for i in range(5):
+        client.post("/tasks/", json={"title": f"Tarea {i:03d}", "category": "bulk"})
+
+    response = client.get("/tasks/", params={"skip": 2, "limit": 2})
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["title"] == "Tarea 002"
+
+
+def test_list_tasks_limit_exceeds_max_returns_422(client):
+    """Un limit superior al máximo permitido devuelve 422."""
+    response = client.get("/tasks/", params={"limit": 200})
+    assert response.status_code == 422
+
+
+def test_list_tasks_by_status_pagination(client):
+    """La paginación también se aplica al filtro por estado."""
+    for i in range(5):
+        client.post("/tasks/", json={"title": f"Tarea {i:03d}", "category": "work"})
+
+    response = client.get("/tasks/status/pending", params={"skip": 1, "limit": 2})
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data) == 2
+    assert data[0]["title"] == "Tarea 001"
