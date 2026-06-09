@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, field_validator
 
 from aplicacion.modelos import TaskStatus
 
@@ -15,13 +15,28 @@ class TaskCreate(BaseModel):
     category: str
     status: TaskStatus = TaskStatus.pending
 
+    @field_validator("title")
+    @classmethod
+    def strip_title(cls, v: str) -> str:
+        return v.strip()
+
 
 # Esquema para actualizar una tarea; todos los campos son opcionales (PATCH parcial)
 class TaskUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=3)
+    title: Optional[str] = None
     description: Optional[str] = None
     category: Optional[str] = None
     status: Optional[TaskStatus] = None
+
+    @field_validator("title")
+    @classmethod
+    def strip_and_validate_title(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        stripped = v.strip()
+        if len(stripped) < 3:
+            raise ValueError("El título debe tener al menos 3 caracteres")
+        return stripped
 
 
 # Esquema de respuesta que devuelve la API; incluye los campos generados por la BD

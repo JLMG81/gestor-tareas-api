@@ -75,8 +75,8 @@ def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
             por la base de datos.
 
     Raises:
-        HTTPException: Error 422 si el título tiene menos de
-            3 caracteres.
+        HTTPException: Error 422 si el título (tras eliminar
+            espacios) tiene menos de 3 caracteres.
     """
     if len(payload.title) < 3:
         raise HTTPException(
