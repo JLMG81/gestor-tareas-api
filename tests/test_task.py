@@ -34,6 +34,20 @@ def test_create_task_title_too_short_returns_422():
     assert response.json()["detail"] == "El título debe tener al menos 3 caracteres"
 
 
+def test_count_tasks_returns_200():
+    response = client.get("/tasks/count")
+    assert response.status_code == 200
+    assert "count" in response.json()
+    assert isinstance(response.json()["count"], int)
+
+
+def test_count_tasks_increases_after_create():
+    before = client.get("/tasks/count").json()["count"]
+    client.post("/tasks/", json={"title": "Nueva tarea", "category": "test"})
+    after = client.get("/tasks/count").json()["count"]
+    assert after == before + 1
+
+
 def test_patch_done_task_returns_409():
     response = client.post("/tasks/", json={"title": "Tarea completa", "category": "trabajo", "status": "done"})
     assert response.status_code == 201
