@@ -11,7 +11,7 @@ from aplicacion.modelos import TaskStatus
 # Esquema para crear una nueva tarea; título y categoría son obligatorios
 class TaskCreate(BaseModel):
     title: str
-    description: Optional[str] = None
+    description: Optional[str] = Field(None, max_length=200)
     category: str
     status: TaskStatus = TaskStatus.pending
 
@@ -19,7 +19,7 @@ class TaskCreate(BaseModel):
 # Esquema para actualizar una tarea; todos los campos son opcionales (PATCH parcial)
 class TaskUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=3)
-    description: Optional[str] = None
+    description: Optional[str] = Field(None, max_length=200)
     category: Optional[str] = None
     status: Optional[TaskStatus] = None
 
