@@ -14,18 +14,20 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 
 @router.get("/", response_model=List[TaskResponse])
-def list_tasks(db: Session = Depends(get_db)):
-    """Devuelve la lista completa de tareas almacenadas.
+def list_tasks(limit: int | None = None, db: Session = Depends(get_db)):
+    """Devuelve la lista de tareas almacenadas.
 
     Args:
+        limit (int | None): Número máximo de tareas a devolver.
+            Si es ``None`` se devuelven todas.
         db (Session): Sesión de base de datos inyectada por
             la dependencia ``get_db``.
 
     Returns:
-        list[Task]: Lista con todas las tareas registradas
-            en la base de datos.
+        list[Task]: Lista de tareas registradas en la base de
+            datos, limitada según el parámetro ``limit``.
     """
-    return db.query(Task).all()
+    return db.query(Task).limit(limit).all()
 
 
 # Devuelve las tareas que coincidan con el estado indicado
