@@ -120,3 +120,40 @@ def test_category_present_in_task_response(client):
     assert len(data) == 1
     assert "category" in data[0]
     assert data[0]["category"] == "estudio"
+
+
+# — Tests de PATCH /tasks/{id}/complete —
+
+def test_complete_task_sets_status_to_done(client):
+    """Happy path: marca una tarea pendiente como done."""
+    create = client.post(
+        "/tasks/",
+        json={"title": "Tarea por completar", "category": "trabajo"},
+    )
+    task_id = create.json()["id"]
+
+    response = client.patch(f"/tasks/{task_id}/complete")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "done"
+    assert data["id"] == task_id
+
+
+def test_complete_task_not_found_returns_404(client):
+    """Caso de error: tarea inexistente devuelve 404."""
+    response = client.patch("/tasks/9999/complete")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Task not found"
+
+
+def test_complete_task_already_done_returns_409(client):
+    """Caso de error: tarea ya completada devuelve 409."""
+    create = client.post(
+        "/tasks/",
+        json={"title": "Tarea hecha", "category": "personal", "status": "done"},
+    )
+    task_id = create.json()["id"]
+
+    response = client.patch(f"/tasks/{task_id}/complete")
+    assert response.status_code == 409
+    assert response.json()["detail"] == "La tarea ya está en estado done"

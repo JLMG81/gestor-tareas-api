@@ -90,6 +90,46 @@ def create_task(payload: TaskCreate, db: Session = Depends(get_db)):
     return task
 
 
+@router.patch("/{task_id}/complete", response_model=TaskResponse)
+def complete_task(task_id: int, db: Session = Depends(get_db)):
+    """Marca una tarea como completada (estado ``done``).
+
+    Actualiza únicamente el campo ``status`` a ``done`` sin
+    necesidad de enviar el cuerpo completo de la tarea.
+
+    Args:
+        task_id (int): Identificador único de la tarea a
+            completar.
+        db (Session): Sesión de base de datos inyectada por
+            la dependencia ``get_db``.
+
+    Returns:
+        Task: Instancia de la tarea con el estado actualizado
+            a ``done``.
+
+    Raises:
+        HTTPException: Error 404 si no existe una tarea con
+            el ``task_id`` indicado.
+        HTTPException: Error 409 si la tarea ya se encuentra
+            en estado ``done``.
+    """
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found",
+        )
+    if task.status == TaskStatus.done:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="La tarea ya está en estado done",
+        )
+    task.status = TaskStatus.done
+    db.commit()
+    db.refresh(task)
+    return task
+
+
 @router.patch("/{task_id}", response_model=TaskResponse)
 def update_task(
     task_id: int, payload: TaskUpdate, db: Session = Depends(get_db)
