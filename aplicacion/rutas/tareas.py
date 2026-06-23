@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from aplicacion.base_de_datos import get_db
-from aplicacion.esquemas import TaskCreate, TaskResponse, TaskUpdate
+from aplicacion.esquemas import TaskCountResponse, TaskCreate, TaskResponse, TaskUpdate
 from aplicacion.modelos import Task, TaskStatus
 
 # Router con prefijo /tasks; agrupa todos los endpoints de tareas
@@ -32,6 +32,22 @@ def list_tasks(db: Session = Depends(get_db)):
 @router.get("/status/{status}", response_model=List[TaskResponse])
 def list_tasks_by_status(status: TaskStatus, db: Session = Depends(get_db)):
     return db.query(Task).filter(Task.status == status).all()
+
+
+@router.get("/count", response_model=TaskCountResponse)
+def count_tasks(db: Session = Depends(get_db)):
+    """Devuelve el número total de tareas en la base de datos.
+
+    Args:
+        db (Session): Sesión de base de datos inyectada por
+            la dependencia ``get_db``.
+
+    Returns:
+        dict: Diccionario con la clave ``count`` y el número
+            total de tareas como valor.
+    """
+    total = db.query(Task).count()
+    return {"count": total}
 
 
 # Devuelve una tarea por su identificador; 404 si no existe
